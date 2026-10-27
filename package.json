@@ -11,8 +11,10 @@
     "build": "tsc",
     "typecheck": "tsc --noEmit",
     "test": "node --test tests/*.test.mjs",
+    "test:regression": "node dist/cli.js test-regression",
     "cli": "node dist/cli.js",
     "demo": "node dist/cli.js demo"
+
   },
   "keywords": [
     "meta",

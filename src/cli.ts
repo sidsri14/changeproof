@@ -13,6 +13,7 @@ import { AlignmentEngine } from './core/alignment_engine.js';
 import { CitationValidator } from './core/citation_validator.js';
 import { PlaywrightSynthesizer } from './core/playwright_synthesizer.js';
 import { HudVisualizer } from './core/hud_visualizer.js';
+import { RegressionRunner } from './core/regression_runner.js';
 import { MultimodalKeyframe, AudioTranscriptSegment, SynthesizedTestSuite } from './types/schema.js';
 
 interface CliArgs {
@@ -24,6 +25,8 @@ interface CliArgs {
   hud?: string;
   spec?: string;
   manifest?: string;
+  baseline?: string;
+  candidate?: string;
   help?: boolean;
 }
 
@@ -31,7 +34,7 @@ function parseArgs(args: string[]): CliArgs {
   const result: CliArgs = {};
   if (args.length === 0) return result;
 
-  const validCommands = ['synthesize', 'verify', 'hud', 'demo', 'help'];
+  const validCommands = ['synthesize', 'verify', 'hud', 'demo', 'test-regression', 'help'];
   let startIndex = 0;
 
   if (validCommands.includes(args[0])) {
@@ -57,6 +60,10 @@ function parseArgs(args: string[]): CliArgs {
       result.spec = args[++i];
     } else if (arg === '--manifest' || arg === '-m') {
       result.manifest = args[++i];
+    } else if (arg === '--baseline' || arg === '-b') {
+      result.baseline = args[++i];
+    } else if (arg === '--candidate' || arg === '--regression' || arg === '-c') {
+      result.candidate = args[++i];
     }
   }
 
@@ -72,27 +79,32 @@ USAGE:
   changeproof <command> [options]
 
 COMMANDS:
-  synthesize   Align multimodal keyframes & voice intents into an evidence-grounded Playwright spec
-  verify       Validate cryptographic SHA-256 citations inside a synthesized Playwright test
-  hud          Generate a standalone interactive Developer HUD visualizer from a session
-  demo         Run a built-in end-to-end checkout demo session with sample SAM 3.1 elements
-  help         Display this help message
+  synthesize        Align multimodal keyframes & voice intents into an evidence-grounded Playwright spec
+  verify            Validate cryptographic SHA-256 citations inside a synthesized Playwright test
+  hud               Generate a standalone interactive Developer HUD visualizer from a session
+  demo              Run a built-in end-to-end checkout demo session with sample SAM 3.1 elements
+  test-regression   Evaluate synthesized assertions against baseline vs regressed web fixtures
+  help              Display this help message
 
 OPTIONS:
-  -i, --input <file>     Path to multimodal session JSON (keyframes + transcripts)
-  -u, --url <url>        Base URL under test (e.g. https://shop.example.com)
-  -n, --name <name>      Name of the test suite (default: "ChangeProof E2E Test")
-  -o, --out <file>       Output file path for generated Playwright spec (.ts)
-  --hud <file>           Output file path for Developer HUD HTML report (.html)
-  --spec <file>          Playwright spec file to verify against evidence manifest
-  -h, --help             Show help documentation
+  -i, --input <file>        Path to multimodal session JSON (keyframes + transcripts)
+  -u, --url <url>           Base URL under test (e.g. https://shop.example.com)
+  -n, --name <name>         Name of the test suite (default: "ChangeProof E2E Test")
+  -o, --out <file>          Output file path for generated Playwright spec (.ts)
+  --hud <file>              Output file path for Developer HUD HTML report (.html)
+  --spec <file>             Playwright spec file to verify against evidence manifest
+  -b, --baseline <file>     Baseline application HTML snapshot (default: fixtures/sample_app/v1_baseline.html)
+  -c, --candidate <file>    Candidate/Regression HTML snapshot (default: fixtures/sample_app/v2_regression.html)
+  -h, --help                Show help documentation
 
 EXAMPLES:
   changeproof synthesize --input session.json --url https://shop.com --out checkout.spec.ts --hud hud.html
+  changeproof test-regression --baseline fixtures/sample_app/v1_baseline.html --candidate fixtures/sample_app/v2_regression.html
   changeproof hud --input session.json --out developer_hud.html
   changeproof demo
 `);
 }
+
 
 export function runDemo(): { suite: SynthesizedTestSuite; hudHtml: string } {
   console.log('⚡ Running ChangeProof built-in demonstration session...');
@@ -305,9 +317,60 @@ export function main(): void {
       process.exit(0);
     }
 
+    if (args.command === 'test-regression') {
+      const baselineFile = args.baseline || path.join(process.cwd(), 'fixtures/sample_app/v1_baseline.html');
+      const candidateFile = args.candidate || path.join(process.cwd(), 'fixtures/sample_app/v2_regression.html');
+
+      if (!fs.existsSync(baselineFile)) {
+        console.error(`Error: Baseline fixture not found: ${baselineFile}`);
+        process.exit(1);
+      }
+      if (!fs.existsSync(candidateFile)) {
+        console.error(`Error: Candidate fixture not found: ${candidateFile}`);
+        process.exit(1);
+      }
+
+      let suite: SynthesizedTestSuite;
+      if (args.input) {
+        const raw = fs.readFileSync(path.resolve(args.input), 'utf-8');
+        const session = JSON.parse(raw);
+        const steps = AlignmentEngine.alignSession(session.keyframes || [], session.transcripts || []);
+        suite = PlaywrightSynthesizer.synthesizeSuite(args.name || session.testName || 'Regression Test Suite', args.url || 'https://localhost:3000', steps);
+      } else {
+        const demo = runDemo();
+        suite = demo.suite;
+      }
+
+      console.log(`\n======================================================`);
+      console.log(`ChangeProof Regression Engine: Evaluating Test Suite`);
+      console.log(`Suite: ${suite.testName} (${suite.steps.length} Grounded Assertions)`);
+      console.log(`======================================================\n`);
+
+      const report = RegressionRunner.compareReleases(suite, baselineFile, candidateFile);
+
+      console.log(`[Baseline Build: ${path.basename(baselineFile)}]`);
+      console.log(`  Status:      ${report.baseline.passed ? '✓ PASSED (100% assertions green)' : '❌ FAILED'}`);
+      console.log(`  Duration:    ${report.baseline.durationMs}ms`);
+
+      console.log(`\n[Candidate Build: ${path.basename(candidateFile)}]`);
+      console.log(`  Status:      ${report.candidate.passed ? '✓ PASSED' : '❌ REGRESSION DETECTED'}`);
+      console.log(`  Duration:    ${report.candidate.durationMs}ms`);
+
+      if (report.regressionDetected) {
+        console.log(`\n🛡️ ChangeProof Isolated Root Cause:`);
+        console.log(`  Divergent Step: Step #${report.divergentStepIndex}`);
+        console.log(`  Analysis:       ${report.rootCauseAnalysis}\n`);
+      } else {
+        console.log(`\n✓ No visual or structural regressions detected between builds.\n`);
+      }
+
+      process.exit(0);
+    }
+
     console.error(`Unknown command: ${args.command}`);
     printUsage();
     process.exit(1);
+
   } catch (err: any) {
     console.error(`Fatal error: ${err?.message || err}`);
     process.exit(1);

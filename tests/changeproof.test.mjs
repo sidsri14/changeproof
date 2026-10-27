@@ -6,7 +6,10 @@ import { PlaywrightSynthesizer } from '../dist/core/playwright_synthesizer.js';
 import { VideoProcessor } from '../dist/core/video_processor.js';
 import { MetaSamAdapter } from '../dist/core/sam_adapter.js';
 import { HudVisualizer } from '../dist/core/hud_visualizer.js';
+import { RegressionRunner } from '../dist/core/regression_runner.js';
 import { runDemo } from '../dist/cli.js';
+import * as path from 'node:path';
+
 
 describe('ChangeProof: Multimodal Playwright Test Synthesis Engine', () => {
 
@@ -426,5 +429,98 @@ describe('ChangeProof: Multimodal Playwright Test Synthesis Engine', () => {
     assert.equal(matches.length, 2);
   });
 
+  test('Test 17: Evaluates synthesized suite against v1_baseline.html and passes 100% assertions', () => {
+    const { suite } = runDemo();
+    const baselinePath = path.resolve('fixtures/sample_app/v1_baseline.html');
+
+    const result = RegressionRunner.evaluateSuite(suite, baselinePath);
+
+    assert.equal(result.passed, true);
+    assert.equal(result.totalSteps, 3);
+    assert.equal(result.passedSteps, 3);
+    assert.equal(result.failedStepIndex, undefined);
+    assert.equal(result.regressionCaught, undefined);
+    assert.ok(result.durationMs >= 0);
+  });
+
+  test('Test 18: Evaluates synthesized suite against v2_regression.html and isolates mutated CTA selector', () => {
+    const { suite } = runDemo();
+    const regressionPath = path.resolve('fixtures/sample_app/v2_regression.html');
+
+    const result = RegressionRunner.evaluateSuite(suite, regressionPath);
+
+    assert.equal(result.passed, false);
+    assert.equal(result.failedStepIndex, 2);
+    assert.ok(result.regressionCaught);
+    assert.ok(result.regressionCaught.includes('elem_add_to_cart'));
+    assert.equal(result.passedSteps, 1); // Step 1 passed, Step 2 failed
+  });
+
+  test('Test 19: compareReleases generates comprehensive release report and root cause analysis', () => {
+    const { suite } = runDemo();
+    const baselinePath = path.resolve('fixtures/sample_app/v1_baseline.html');
+    const regressionPath = path.resolve('fixtures/sample_app/v2_regression.html');
+
+    const report = RegressionRunner.compareReleases(suite, baselinePath, regressionPath);
+
+    assert.equal(report.suiteName, 'E-Commerce Headset Checkout Flow');
+    assert.equal(report.baseline.passed, true);
+    assert.equal(report.candidate.passed, false);
+    assert.equal(report.regressionDetected, true);
+    assert.equal(report.divergentStepIndex, 2);
+    assert.ok(report.rootCauseAnalysis.includes('step #2'));
+    assert.ok(report.rootCauseAnalysis.includes('elem_add_to_cart'));
+  });
+
+  test('Test 20: RegressionRunner detects disabled element regression on click action', () => {
+    const sampleHtml = `<div><button id="submit-btn" data-testid="checkout-btn" disabled>Submit</button></div>`;
+    const step = {
+      stepIndex: 1,
+      action: 'click',
+      targetSelector: '[data-testid="checkout-btn"]',
+      evidence: {
+        frameTimestampMs: 1000,
+        frameIndex: 0,
+        boundingBox: { x: 10, y: 10, width: 100, height: 40 },
+        transcriptSpan: { startMs: 500, endMs: 1200, text: 'Click checkout' },
+        confidence: 0.95,
+        evidenceHash: 'a'.repeat(64)
+      },
+      isDestructive: false,
+      requiresOperatorConfirmation: false
+    };
+
+    const evalResult = RegressionRunner.evaluateStep(step, sampleHtml);
+
+    assert.equal(evalResult.passed, false);
+    assert.ok(evalResult.error.includes('disabled in this build'));
+  });
+
+  test('Test 21: RegressionRunner detects missing text assertion regression', () => {
+    const sampleHtml = `<div class="badge">Order Status: Processing</div>`;
+    const step = {
+      stepIndex: 1,
+      action: 'assert_text',
+      targetSelector: '.badge',
+      targetValue: 'Order Confirmation #ORD-9821',
+      evidence: {
+        frameTimestampMs: 2000,
+        frameIndex: 1,
+        boundingBox: { x: 10, y: 10, width: 100, height: 40 },
+        transcriptSpan: { startMs: 1800, endMs: 2200, text: 'Verify order confirmed' },
+        confidence: 0.98,
+        evidenceHash: 'b'.repeat(64)
+      },
+      isDestructive: false,
+      requiresOperatorConfirmation: false
+    };
+
+    const evalResult = RegressionRunner.evaluateStep(step, sampleHtml);
+
+    assert.equal(evalResult.passed, false);
+    assert.ok(evalResult.error.includes('missing from page content'));
+  });
+
 });
+
 

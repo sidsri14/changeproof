@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Meta Store - Quest 3S Checkout (Regression v2)</title>
+  <style>
+    :root {
+      --primary: #0064e0;
+      --bg: #0a0c10;
+      --card-bg: #161b22;
+      --border: #30363d;
+      --text: #f0f6fc;
+      --text-muted: #8b949e;
+      --danger: #da3633;
+      --danger-text: #f85149;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background-color: var(--bg); color: var(--text); padding: 40px 20px; display: flex; justify-content: center; }
+    .store-container { max-width: 720px; width: 100%; }
+    header { margin-bottom: 24px; border-bottom: 1px solid var(--border); padding-bottom: 16px; }
+    h1 { font-size: 24px; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+    .version-tag { font-size: 12px; background: rgba(218, 54, 51, 0.15); color: #f85149; padding: 4px 8px; border-radius: 12px; border: 1px solid rgba(218, 54, 51, 0.4); }
+    .search-bar { margin: 20px 0; }
+    .search-input { width: 100%; padding: 12px 16px; border-radius: 8px; border: 1px solid var(--border); background: var(--card-bg); color: var(--text); font-size: 15px; }
+    .product-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; }
+    .product-details h2 { font-size: 18px; margin-bottom: 6px; }
+    .product-details .price { font-size: 20px; font-weight: 700; color: #58a6ff; }
+    .btn-disabled { background: #21262d; color: #8b949e; border: 1px solid #30363d; padding: 12px 24px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: not-allowed; }
+    .error-card { background: rgba(218, 54, 51, 0.1); border: 1px solid rgba(218, 54, 51, 0.4); border-radius: 12px; padding: 20px; margin-top: 20px; }
+    .error-badge { display: inline-flex; align-items: center; gap: 8px; font-weight: 600; color: var(--danger-text); font-size: 16px; }
+  </style>
+</head>
+<body>
+  <div class="store-container">
+    <header>
+      <h1>Meta Store Checkout <span class="version-tag">v2.0.0 Regressed Build</span></h1>
+    </header>
+
+    <div class="search-bar">
+      <!-- Search input preserved -->
+      <input 
+        type="text" 
+        class="search-input" 
+        id="catalog-search" 
+        data-testid="elem_search" 
+        aria-label="Search catalog input" 
+        placeholder="Search Meta catalog..." 
+        value="Meta Quest 3S"
+      />
+    </div>
+
+    <div class="product-card" id="product-meta-quest-3s">
+      <div class="product-details">
+        <h2>Meta Quest 3S (128GB)</h2>
+        <p class="price">$299.99 USD</p>
+      </div>
+      <!-- REGRESSION #1: CTA selector mutated to legacy 'btn_deprecated_buy' and disabled, missing elem_add_to_cart -->
+      <button 
+        type="button" 
+        id="btn-out-of-stock" 
+        data-testid="btn_deprecated_buy" 
+        aria-label="Unavailable CTA" 
+        class="btn-disabled"
+        disabled
+      >
+        Temporarily Unavailable
+      </button>
+    </div>
+
+    <!-- REGRESSION #2: Order confirmation badge missing and replaced with error alert -->
+    <div class="error-card" id="checkout-error-section">
+      <div 
+        id="error-alert-badge" 
+        data-testid="elem_error_alert" 
+        aria-label="Inventory Lock Failed" 
+        class="error-badge"
+      >
+        ⚠ Checkout Failed: Error #ERR-4001 (Inventory Allocation Fault)
+      </div>
+      <p style="margin-top: 8px; font-size: 13px; color: var(--text-muted);">
+        The checkout transaction could not be completed. Please refresh or try again later.
+      </p>
+    </div>
+  </div>
+</body>
+</html>

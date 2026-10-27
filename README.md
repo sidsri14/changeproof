@@ -69,13 +69,17 @@ ChangeProof includes a developer-facing CLI and interactive HUD visualizer:
 npm run demo
 # or: node dist/cli.js demo
 
-# 2. Synthesize Playwright spec and Developer HUD from session JSON:
+# 2. Evaluate regressions against baseline vs regressed release fixtures:
+npm run test:regression
+# or: node dist/cli.js test-regression --baseline fixtures/sample_app/v1_baseline.html --candidate fixtures/sample_app/v2_regression.html
+
+# 3. Synthesize Playwright spec and Developer HUD from session JSON:
 node dist/cli.js synthesize --input session.json --url https://shop.com --out spec.ts --hud hud.html
 
-# 3. Cryptographically verify SHA-256 evidence citations in a spec:
+# 4. Cryptographically verify SHA-256 evidence citations in a spec:
 node dist/cli.js verify --spec demo/demo_checkout.spec.ts
 
-# 4. Generate standalone Developer HUD report:
+# 5. Generate standalone Developer HUD report:
 node dist/cli.js hud --input session.json --out developer_hud.html
 ```
 
@@ -88,9 +92,23 @@ The standalone HTML report provides a zero-dependency interactive dashboard feat
 
 ---
 
-## 5. Verification & Testing
+## 5. Visual & Structural Regression Detection
 
-ChangeProof features a complete automated test suite (**16/16 automated tests passing in <15ms**):
+ChangeProof includes an automated `RegressionRunner` engine and evolving sample app fixtures (`fixtures/sample_app/`):
+- `v1_baseline.html`: Pristine baseline e-commerce checkout release.
+- `v2_regression.html`: Injected subtle regressions (mutated CTA testids, disabled button state, broken confirmation badges).
+
+When evaluating releases, ChangeProof checks each grounded action and assertion:
+- Resolves composite Playwright selectors (`data-testid`, `aria-label`, `:has-text()`, `#id`, `.class`).
+- Enforces element interactability invariants (flags disabled or hidden elements on click actions).
+- Verifies text content assertions against the rendered document.
+- Pinpoints the exact divergent step index and provides automatic root cause analysis.
+
+---
+
+## 6. Verification & Testing
+
+ChangeProof features a complete automated test suite (**21/21 automated tests passing in <20ms**):
 - Deterministic SHA-256 evidence hashing
 - Bounding box dimension enforcement
 - Rejection of tampered evidence hashes
@@ -105,14 +123,21 @@ ChangeProof features a complete automated test suite (**16/16 automated tests pa
 - Standalone HTML Developer HUD generation with SVG overlays
 - Built-in `runDemo()` checkout session synthesis
 - Cryptographic citation pattern validation
+- Evaluation of synthesized suite against `v1_baseline.html` (100% assertions green)
+- Evaluation against `v2_regression.html` with accurate isolation of mutated CTA selector
+- `compareReleases()` baseline vs candidate comparison report & root cause analysis
+- Disabled element detection during click action
+- Missing text assertion detection
 
 ### Run Tests:
 ```bash
 npm run build
 npm test
+npm run test:regression
 ```
 
 ---
 
-## 6. License
+## 7. License
+
 MIT License. Created for the Meta Global AI Developer Hackathon.
