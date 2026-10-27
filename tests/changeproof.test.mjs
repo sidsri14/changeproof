@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import { CitationValidator } from '../dist/core/citation_validator.js';
 import { AlignmentEngine } from '../dist/core/alignment_engine.js';
 import { PlaywrightSynthesizer } from '../dist/core/playwright_synthesizer.js';
+import { VideoProcessor } from '../dist/core/video_processor.js';
+import { MetaSamAdapter } from '../dist/core/sam_adapter.js';
 
 describe('ChangeProof: Multimodal Playwright Test Synthesis Engine', () => {
 
@@ -261,4 +263,94 @@ describe('ChangeProof: Multimodal Playwright Test Synthesis Engine', () => {
     assert.ok(suite.playwrightCode.includes(`await target_2.click();`));
   });
 
+  test('Test 9: VideoProcessor hashes frames deterministically and deduplicates identical frames', () => {
+    const bufferA = Buffer.from('frame_pixels_data_version_1');
+    const bufferB = Buffer.from('frame_pixels_data_version_1');
+    const bufferC = Buffer.from('frame_pixels_data_version_2_changed');
+
+    const hashA = VideoProcessor.hashFrame(bufferA);
+    const hashB = VideoProcessor.hashFrame(bufferB);
+    const hashC = VideoProcessor.hashFrame(bufferC);
+
+    assert.equal(hashA, hashB);
+    assert.notEqual(hashA, hashC);
+
+    // Sequence with identical consecutive frame
+    const rawFrames = [
+      { timestampMs: 0, data: bufferA },
+      { timestampMs: 33, data: bufferB }, // duplicate
+      { timestampMs: 66, data: bufferC }
+    ];
+
+    const processed = VideoProcessor.processFrameSequence(rawFrames, true);
+    assert.equal(processed.length, 2);
+    assert.equal(processed[0].frameIndex, 0);
+    assert.equal(processed[1].frameIndex, 1);
+    assert.equal(processed[1].timestampMs, 66);
+  });
+
+  test('Test 10: VideoProcessor calculates normalized frame delta between distinct byte buffers', () => {
+    const b1 = new Uint8Array([10, 20, 30, 40]);
+    const b2 = new Uint8Array([10, 20, 30, 40]);
+    const b3 = new Uint8Array([255, 255, 255, 255]);
+
+    const zeroDelta = VideoProcessor.computeFrameDelta(b1, b2);
+    const highDelta = VideoProcessor.computeFrameDelta(b1, b3);
+
+    assert.equal(zeroDelta, 0);
+    assert.ok(highDelta > 0.80);
+  });
+
+  test('Test 11: VideoProcessor segments voice narration audio windows into transcript segments', () => {
+    const windows = [
+      { startMs: 500, endMs: 1500, transcript: '  Click on Login button  ', intent: 'action', targetElementDescription: 'login' },
+      { startMs: 1600, endMs: 2500, transcript: 'Verify dashboard is visible', intent: 'assertion' }
+    ];
+
+    const segments = VideoProcessor.segmentAudioTrack(windows);
+    assert.equal(segments.length, 2);
+    assert.equal(segments[0].segmentIndex, 1);
+    assert.equal(segments[0].text, 'Click on Login button');
+    assert.equal(segments[0].intent, 'action');
+    assert.equal(segments[1].intent, 'assertion');
+  });
+
+  test('Test 12: MetaSamAdapter segments keyframe with user prompt points', async () => {
+    const adapter = new MetaSamAdapter({ minConfidenceThreshold: 0.70 });
+
+    const keyframe = {
+      frameIndex: 0,
+      timestampMs: 1000,
+      imageHash: 'frame_hash_test',
+      detectedElements: []
+    };
+
+    // User clicked at (450, 300)
+    const elements = await adapter.segmentKeyframe(keyframe, [{ x: 450, y: 300, label: 1 }]);
+    assert.equal(elements.length, 1);
+    assert.equal(elements[0].id, 'elem_0_1');
+    assert.equal(elements[0].isClickable, true);
+    assert.ok(elements[0].confidence >= 0.70);
+    assert.ok(elements[0].boundingBox.width > 0);
+    assert.ok(elements[0].boundingBox.height > 0);
+  });
+
+  test('Test 13: MetaSamAdapter filters out low-confidence segmentations below threshold', async () => {
+    // Set threshold higher than deterministic score (0.94)
+    const highThresholdAdapter = new MetaSamAdapter({ minConfidenceThreshold: 0.99 });
+
+    const keyframe = {
+      frameIndex: 1,
+      timestampMs: 2000,
+      imageHash: 'frame_hash_high',
+      detectedElements: []
+    };
+
+    const elements = await highThresholdAdapter.segmentKeyframe(keyframe, [{ x: 100, y: 200, label: 1 }]);
+    // Element with 0.94 confidence should be filtered out, fallback main content area generated
+    assert.ok(elements.length >= 1);
+    assert.equal(elements[0].id, 'elem_1_main');
+  });
+
 });
+
