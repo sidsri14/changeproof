@@ -1,0 +1,28 @@
+{
+  "name": "changeproof",
+  "version": "0.1.0",
+  "description": "Evidence-grounded multimodal regression-testing agent synthesizing Playwright e2e suites from screen recordings",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test tests/*.test.mjs",
+    "demo": "node demo/run_demo.mjs"
+  },
+  "keywords": [
+    "meta",
+    "playwright",
+    "sam-3.1",
+    "multimodal",
+    "regression-testing",
+    "e2e-testing",
+    "ai-agent"
+  ],
+  "author": "Siddharth Srivastava",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  }
+}
