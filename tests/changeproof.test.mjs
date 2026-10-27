@@ -5,6 +5,8 @@ import { AlignmentEngine } from '../dist/core/alignment_engine.js';
 import { PlaywrightSynthesizer } from '../dist/core/playwright_synthesizer.js';
 import { VideoProcessor } from '../dist/core/video_processor.js';
 import { MetaSamAdapter } from '../dist/core/sam_adapter.js';
+import { HudVisualizer } from '../dist/core/hud_visualizer.js';
+import { runDemo } from '../dist/cli.js';
 
 describe('ChangeProof: Multimodal Playwright Test Synthesis Engine', () => {
 
@@ -350,6 +352,78 @@ describe('ChangeProof: Multimodal Playwright Test Synthesis Engine', () => {
     // Element with 0.94 confidence should be filtered out, fallback main content area generated
     assert.ok(elements.length >= 1);
     assert.equal(elements[0].id, 'elem_1_main');
+  });
+
+  test('Test 14: HudVisualizer generates standalone HTML report with SAM 3.1 overlays and citations', () => {
+    const evidenceHash = CitationValidator.computeEvidenceHash(0, 1000, { x: 50, y: 50, width: 100, height: 40 }, 'click button');
+    const step = {
+      stepIndex: 1,
+      action: 'click',
+      targetSelector: 'button#checkout',
+      evidence: {
+        frameTimestampMs: 1000,
+        frameIndex: 0,
+        boundingBox: { x: 50, y: 50, width: 100, height: 40 },
+        transcriptSpan: { startMs: 900, endMs: 1200, text: 'click button' },
+        confidence: 0.95,
+        evidenceHash
+      },
+      isDestructive: false,
+      requiresOperatorConfirmation: false
+    };
+
+    const suite = {
+      suiteId: 'suite_hud_test',
+      testName: 'Visualizer Test Suite',
+      baseUrl: 'https://app.test.com',
+      generatedAt: '2026-10-28T01:00:00.000Z',
+      steps: [step],
+      playwrightCode: `await page.click('button#checkout');`
+    };
+
+    const keyframes = [{
+      frameIndex: 0,
+      timestampMs: 1000,
+      imageHash: 'hash_0',
+      detectedElements: []
+    }];
+
+    const html = HudVisualizer.generateReportHtml(suite, keyframes);
+
+    assert.ok(html.includes('<!DOCTYPE html>'));
+    assert.ok(html.includes('ChangeProof Developer HUD'));
+    assert.ok(html.includes('Visualizer Test Suite'));
+    assert.ok(html.includes('https://app.test.com'));
+    assert.ok(html.includes('100% Cryptographically Grounded'));
+    assert.ok(html.includes('SAM 3.1 TARGET'));
+    assert.ok(html.includes(evidenceHash.substring(0, 16)));
+  });
+
+  test('Test 15: runDemo executes end-to-end checkout demo and returns 100% grounded suite', () => {
+    const { suite, hudHtml } = runDemo();
+
+    assert.equal(suite.testName, 'E-Commerce Headset Checkout Flow');
+    assert.equal(suite.steps.length, 3);
+    assert.ok(suite.playwrightCode.includes('test.describe'));
+    assert.ok(suite.playwrightCode.includes('store.meta.com'));
+    assert.ok(suite.playwrightCode.includes('Evidence: Frame #0'));
+    assert.ok(hudHtml.includes('E-Commerce Headset Checkout Flow'));
+    assert.ok(hudHtml.includes('100% Cryptographically Grounded'));
+  });
+
+  test('Test 16: Citation pattern matches full 64-char and truncated evidence comments', () => {
+    const citationRegex = /\/\/\s*\[Evidence:\s*Frame\s*#\d+\s*@\s*\d+ms\s*\|\s*Box:\s*\(\d+,\d+,\d+x\d+\)\s*\|\s*Hash:\s*[a-f0-9]+(?:\.\.\.)?\]/g;
+    
+    const sampleCode = `
+      // [Evidence: Frame #0 @ 1200ms | Box: (120,80,280x42) | Hash: 5f71b61359d4c2a4985720491823904812039481230491820394812039481234]
+      await page.click('button');
+      // [Evidence: Frame #1 @ 3500ms | Box: (420,320,160x48) | Hash: aea5bbca590b...]
+      await expect(elem).toBeVisible();
+    `;
+
+    const matches = sampleCode.match(citationRegex);
+    assert.ok(matches);
+    assert.equal(matches.length, 2);
   });
 
 });

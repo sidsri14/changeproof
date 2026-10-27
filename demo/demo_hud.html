@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ChangeProof HUD: E-Commerce Headset Checkout Flow</title>
+  <style>
+    :root {
+      --bg-primary: #0d1117;
+      --bg-secondary: #161b22;
+      --bg-card: #21262d;
+      --border-color: #30363d;
+      --accent-teal: #2dd4bf;
+      --accent-blue: #38bdf8;
+      --accent-purple: #c084fc;
+      --accent-green: #34d399;
+      --text-main: #f0f6fc;
+      --text-muted: #8b949e;
+      --code-bg: #111419;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: var(--bg-primary);
+      color: var(--text-main);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.5;
+      padding: 24px;
+    }
+    .hud-container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .hud-header {
+      background: linear-gradient(135deg, #161b22 0%, #1a2230 100%);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .hud-title h1 {
+      font-size: 24px;
+      font-weight: 700;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .hud-subtitle {
+      color: var(--text-muted);
+      font-size: 14px;
+      margin-top: 4px;
+    }
+    .hud-badges {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+    .status-badge {
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .status-badge.verified {
+      background: rgba(52, 211, 153, 0.15);
+      color: var(--accent-green);
+      border: 1px solid rgba(52, 211, 153, 0.4);
+    }
+    .summary-metrics {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .metric-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 16px;
+      text-align: center;
+    }
+    .metric-val {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--accent-teal);
+    }
+    .metric-label {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+    .step-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      margin-bottom: 20px;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+    .step-header {
+      background: var(--bg-card);
+      padding: 14px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .step-title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .step-number {
+      font-weight: bold;
+      color: var(--text-muted);
+      font-family: monospace;
+    }
+    .badge {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 6px;
+      text-transform: uppercase;
+    }
+    .badge-action {
+      background: rgba(56, 189, 248, 0.15);
+      color: var(--accent-blue);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+    }
+    .badge-assertion {
+      background: rgba(192, 132, 252, 0.15);
+      color: var(--accent-purple);
+      border: 1px solid rgba(192, 132, 252, 0.3);
+    }
+    .step-selector code {
+      background: var(--code-bg);
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 13px;
+      color: #e2e8f0;
+      border: 1px solid #30363d;
+    }
+    .confidence-tag {
+      font-size: 12px;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 12px;
+    }
+    .confidence-tag.high-conf {
+      background: rgba(45, 212, 191, 0.15);
+      color: var(--accent-teal);
+    }
+    .confidence-tag.mid-conf {
+      background: rgba(251, 191, 36, 0.15);
+      color: #fbbf24;
+    }
+    .step-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      padding: 20px;
+    }
+    @media (max-width: 860px) {
+      .step-grid { grid-template-columns: 1fr; }
+    }
+    .visual-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+    .frame-canvas-mock {
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      overflow: hidden;
+      background: #000;
+    }
+    .canvas-svg {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+    .evidence-attestation {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+    }
+    .hash-label { color: var(--text-muted); }
+    .hash-code {
+      background: var(--code-bg);
+      padding: 2px 6px;
+      border-radius: 4px;
+      color: var(--accent-teal);
+      font-family: monospace;
+      font-size: 11px;
+    }
+    .intent-code-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .intent-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 14px;
+    }
+    .intent-header {
+      font-size: 12px;
+      color: var(--accent-blue);
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+    .transcript-quote {
+      font-size: 14px;
+      font-style: italic;
+      color: #e2e8f0;
+    }
+    .code-box {
+      background: var(--code-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      overflow: hidden;
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    .code-header {
+      background: #181d24;
+      padding: 8px 14px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border-color);
+    }
+    .code-block {
+      padding: 14px;
+      font-family: 'JetBrains Mono', Consolas, Monaco, monospace;
+      font-size: 13px;
+      color: #93c5fd;
+      overflow-x: auto;
+      white-space: pre-wrap;
+      line-height: 1.6;
+    }
+    .suite-code-section {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 20px;
+      margin-top: 30px;
+    }
+    .suite-code-section h2 {
+      font-size: 18px;
+      margin-bottom: 14px;
+      color: #fff;
+    }
+    .full-code-block {
+      background: var(--code-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 16px;
+      font-family: monospace;
+      font-size: 12px;
+      color: #e2e8f0;
+      overflow-x: auto;
+      max-height: 400px;
+      overflow-y: auto;
+      white-space: pre;
+    }
+    .hud-footer {
+      text-align: center;
+      margin-top: 40px;
+      color: var(--text-muted);
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="hud-container">
+    <div class="hud-header">
+      <div class="hud-title">
+        <h1>ChangeProof Developer HUD 🛡️</h1>
+        <div class="hud-subtitle">Suite: <strong>E-Commerce Headset Checkout Flow</strong> &bull; Target: <code>https://store.meta.com</code></div>
+      </div>
+      <div class="hud-badges">
+        <span class="status-badge verified">
+          ✓ 100% Cryptographically Grounded
+        </span>
+      </div>
+    </div>
+
+    <div class="summary-metrics">
+      <div class="metric-card">
+        <div class="metric-val">3</div>
+        <div class="metric-label">Synthesized Steps</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-val">3 / 3</div>
+        <div class="metric-label">SAM 3.1 & Hash Citations</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-val">0</div>
+        <div class="metric-label">Hallucinated Selectors</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-val">100%</div>
+        <div class="metric-label">Fail-Closed Guarantee</div>
+      </div>
+    </div>
+
+    <div class="steps-container">
+      
+      <div class="step-card" id="step-1">
+        <div class="step-header">
+          <div class="step-title">
+            <span class="step-number">#1</span>
+            <span class="badge badge-action">CLICK</span>
+            <span class="step-selector"><code>button:has-text(&quot;Search catalog input&quot;), [aria-label=&quot;Search catalog input&quot;], [data-testid=&quot;elem_search&quot;]</code></span>
+          </div>
+          <div class="step-meta">
+            <span class="confidence-tag high-conf">94% Grounded</span>
+          </div>
+        </div>
+
+        <div class="step-grid">
+          <!-- Left: Visual & SAM 3.1 Bounding Box -->
+          <div class="visual-panel">
+            <div class="panel-header">
+              <span>🖼️ Frame #0 @ 1200ms</span>
+              <span class="element-label">Box: [120, 80, 280x42]</span>
+            </div>
+            <div class="frame-canvas-mock">
+              <svg viewBox="0 0 800 450" class="canvas-svg" xmlns="http://www.w3.org/2000/svg">
+                <!-- Browser viewport mockup -->
+                <rect x="0" y="0" width="800" height="450" fill="#1e2430" rx="6" />
+                <rect x="0" y="0" width="800" height="32" fill="#2d3748" rx="6" />
+                <circle cx="20" cy="16" r="5" fill="#e53e3e" />
+                <circle cx="36" cy="16" r="5" fill="#ecc94b" />
+                <circle cx="52" cy="16" r="5" fill="#48bb78" />
+                <text x="80" y="20" fill="#a0aec0" font-size="11" font-family="monospace">https://store.meta.com</text>
+                
+                <!-- Mock wireframe layout elements -->
+                <rect x="40" y="55" width="220" height="24" fill="#323d4e" rx="4" />
+                <rect x="40" y="95" width="720" height="1" fill="#2d3748" />
+                <rect x="40" y="120" width="340" height="18" fill="#2d3748" rx="3" />
+                <rect x="40" y="150" width="280" height="14" fill="#2d3748" rx="3" />
+                
+                <!-- Detected SAM 3.1 bounding box highlight -->
+                <rect 
+                  x="120" 
+                  y="80" 
+                  width="280" 
+                  height="42" 
+                  fill="rgba(56, 178, 172, 0.25)" 
+                  stroke="#38b2ac" 
+                  stroke-width="2" 
+                  stroke-dasharray="4,2" 
+                  rx="4"
+                />
+                <circle cx="130" cy="90" r="3" fill="#38b2ac" />
+                <text 
+                  x="128" 
+                  y="74" 
+                  fill="#38b2ac" 
+                  font-size="10" 
+                  font-weight="bold" 
+                  font-family="monospace"
+                >SAM 3.1 TARGET</text>
+              </svg>
+            </div>
+            <div class="evidence-attestation">
+              <span class="hash-label">SHA-256 Provenance:</span>
+              <code class="hash-code" title="5f71b61359d4d9cf112544dd7f7a9ef2cfd6f79f3822b5f972d83aedd77b1ff2">5f71b61359d4d9cf...</code>
+            </div>
+          </div>
+
+          <!-- Right: Spoken Intent & Synthesized Code -->
+          <div class="intent-code-panel">
+            <div class="intent-box">
+              <div class="intent-header">
+                <span>🎙️ Spoken Intent (1250ms – 2200ms)</span>
+              </div>
+              <p class="transcript-quote">"Search for &quot;Meta Quest 3S&quot; in the catalog"</p>
+            </div>
+
+            <div class="code-box">
+              <div class="code-header">
+                <span>⚡ Synthesized Playwright Action</span>
+              </div>
+              <pre class="code-block"><code>// [Evidence: Frame #0 @ 1200ms]
+const elem = page.locator('button:has-text(&quot;Search catalog input&quot;), [aria-label=&quot;Search catalog input&quot;], [data-testid=&quot;elem_search&quot;]');
+await expect(elem).toBeVisible();
+await elem.click();</code></pre>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+
+      <div class="step-card" id="step-2">
+        <div class="step-header">
+          <div class="step-title">
+            <span class="step-number">#2</span>
+            <span class="badge badge-action">CLICK</span>
+            <span class="step-selector"><code>button:has-text(&quot;Add to Cart button&quot;), [aria-label=&quot;Add to Cart button&quot;], [data-testid=&quot;elem_add_to_cart&quot;]</code></span>
+          </div>
+          <div class="step-meta">
+            <span class="confidence-tag high-conf">97% Grounded</span>
+          </div>
+        </div>
+
+        <div class="step-grid">
+          <!-- Left: Visual & SAM 3.1 Bounding Box -->
+          <div class="visual-panel">
+            <div class="panel-header">
+              <span>🖼️ Frame #1 @ 3500ms</span>
+              <span class="element-label">Box: [420, 320, 160x48]</span>
+            </div>
+            <div class="frame-canvas-mock">
+              <svg viewBox="0 0 800 450" class="canvas-svg" xmlns="http://www.w3.org/2000/svg">
+                <!-- Browser viewport mockup -->
+                <rect x="0" y="0" width="800" height="450" fill="#1e2430" rx="6" />
+                <rect x="0" y="0" width="800" height="32" fill="#2d3748" rx="6" />
+                <circle cx="20" cy="16" r="5" fill="#e53e3e" />
+                <circle cx="36" cy="16" r="5" fill="#ecc94b" />
+                <circle cx="52" cy="16" r="5" fill="#48bb78" />
+                <text x="80" y="20" fill="#a0aec0" font-size="11" font-family="monospace">https://store.meta.com</text>
+                
+                <!-- Mock wireframe layout elements -->
+                <rect x="40" y="55" width="220" height="24" fill="#323d4e" rx="4" />
+                <rect x="40" y="95" width="720" height="1" fill="#2d3748" />
+                <rect x="40" y="120" width="340" height="18" fill="#2d3748" rx="3" />
+                <rect x="40" y="150" width="280" height="14" fill="#2d3748" rx="3" />
+                
+                <!-- Detected SAM 3.1 bounding box highlight -->
+                <rect 
+                  x="420" 
+                  y="320" 
+                  width="160" 
+                  height="48" 
+                  fill="rgba(56, 178, 172, 0.25)" 
+                  stroke="#38b2ac" 
+                  stroke-width="2" 
+                  stroke-dasharray="4,2" 
+                  rx="4"
+                />
+                <circle cx="430" cy="330" r="3" fill="#38b2ac" />
+                <text 
+                  x="428" 
+                  y="314" 
+                  fill="#38b2ac" 
+                  font-size="10" 
+                  font-weight="bold" 
+                  font-family="monospace"
+                >SAM 3.1 TARGET</text>
+              </svg>
+            </div>
+            <div class="evidence-attestation">
+              <span class="hash-label">SHA-256 Provenance:</span>
+              <code class="hash-code" title="aea5bbca590b8539a0740a4fb72483ddda351937e47609133ab68ebccde9b882">aea5bbca590b8539...</code>
+            </div>
+          </div>
+
+          <!-- Right: Spoken Intent & Synthesized Code -->
+          <div class="intent-code-panel">
+            <div class="intent-box">
+              <div class="intent-header">
+                <span>🎙️ Spoken Intent (3600ms – 4400ms)</span>
+              </div>
+              <p class="transcript-quote">"Click Add to Cart to purchase the headset"</p>
+            </div>
+
+            <div class="code-box">
+              <div class="code-header">
+                <span>⚡ Synthesized Playwright Action</span>
+              </div>
+              <pre class="code-block"><code>// [Evidence: Frame #1 @ 3500ms]
+const elem = page.locator('button:has-text(&quot;Add to Cart button&quot;), [aria-label=&quot;Add to Cart button&quot;], [data-testid=&quot;elem_add_to_cart&quot;]');
+await expect(elem).toBeVisible();
+await elem.click();</code></pre>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+
+      <div class="step-card" id="step-3">
+        <div class="step-header">
+          <div class="step-title">
+            <span class="step-number">#3</span>
+            <span class="badge badge-assertion">ASSERT_VISIBLE</span>
+            <span class="step-selector"><code>button:has-text(&quot;Order Confirmation #ORD-9821&quot;), [aria-label=&quot;Order Confirmation #ORD-9821&quot;], [data-testid=&quot;elem_order_badge&quot;]</code></span>
+          </div>
+          <div class="step-meta">
+            <span class="confidence-tag high-conf">98% Grounded</span>
+          </div>
+        </div>
+
+        <div class="step-grid">
+          <!-- Left: Visual & SAM 3.1 Bounding Box -->
+          <div class="visual-panel">
+            <div class="panel-header">
+              <span>🖼️ Frame #2 @ 6000ms</span>
+              <span class="element-label">Box: [200, 150, 380x60]</span>
+            </div>
+            <div class="frame-canvas-mock">
+              <svg viewBox="0 0 800 450" class="canvas-svg" xmlns="http://www.w3.org/2000/svg">
+                <!-- Browser viewport mockup -->
+                <rect x="0" y="0" width="800" height="450" fill="#1e2430" rx="6" />
+                <rect x="0" y="0" width="800" height="32" fill="#2d3748" rx="6" />
+                <circle cx="20" cy="16" r="5" fill="#e53e3e" />
+                <circle cx="36" cy="16" r="5" fill="#ecc94b" />
+                <circle cx="52" cy="16" r="5" fill="#48bb78" />
+                <text x="80" y="20" fill="#a0aec0" font-size="11" font-family="monospace">https://store.meta.com</text>
+                
+                <!-- Mock wireframe layout elements -->
+                <rect x="40" y="55" width="220" height="24" fill="#323d4e" rx="4" />
+                <rect x="40" y="95" width="720" height="1" fill="#2d3748" />
+                <rect x="40" y="120" width="340" height="18" fill="#2d3748" rx="3" />
+                <rect x="40" y="150" width="280" height="14" fill="#2d3748" rx="3" />
+                
+                <!-- Detected SAM 3.1 bounding box highlight -->
+                <rect 
+                  x="200" 
+                  y="150" 
+                  width="300" 
+                  height="60" 
+                  fill="rgba(56, 178, 172, 0.25)" 
+                  stroke="#38b2ac" 
+                  stroke-width="2" 
+                  stroke-dasharray="4,2" 
+                  rx="4"
+                />
+                <circle cx="210" cy="160" r="3" fill="#38b2ac" />
+                <text 
+                  x="208" 
+                  y="144" 
+                  fill="#38b2ac" 
+                  font-size="10" 
+                  font-weight="bold" 
+                  font-family="monospace"
+                >SAM 3.1 TARGET</text>
+              </svg>
+            </div>
+            <div class="evidence-attestation">
+              <span class="hash-label">SHA-256 Provenance:</span>
+              <code class="hash-code" title="b47ccb4c94ecf8b33b1155b5cb9e1868658d78391f3ac6819d42bbcf05f9a956">b47ccb4c94ecf8b3...</code>
+            </div>
+          </div>
+
+          <!-- Right: Spoken Intent & Synthesized Code -->
+          <div class="intent-code-panel">
+            <div class="intent-box">
+              <div class="intent-header">
+                <span>🎙️ Spoken Intent (6100ms – 7000ms)</span>
+              </div>
+              <p class="transcript-quote">"Verify the order confirmation screen is displayed"</p>
+            </div>
+
+            <div class="code-box">
+              <div class="code-header">
+                <span>⚡ Synthesized Playwright Action</span>
+              </div>
+              <pre class="code-block"><code>// [Evidence: Frame #2 @ 6000ms]
+await expect(page.locator('button:has-text(&quot;Order Confirmation #ORD-9821&quot;), [aria-label=&quot;Order Confirmation #ORD-9821&quot;], [data-testid=&quot;elem_order_badge&quot;]')).toBeVisible();</code></pre>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+    </div>
+
+    <div class="suite-code-section">
+      <h2>Full Executable Playwright Test Spec</h2>
+      <pre class="full-code-block"><code>import { test, expect } from &#039;@playwright/test&#039;;
+
+/**
+ * Auto-Synthesized by ChangeProof (Meta Global AI Developer Hackathon)
+ * Suite ID: suite_1793130895914
+ * Generated At: 2026-10-27T19:54:55.914Z
+ * Grounded Steps: 3
+ */
+test.describe(&#039;E-Commerce Headset Checkout Flow&#039;, () =&gt; {
+  test(&#039;execute grounded visual workflow&#039;, async ({ page }) =&gt; {
+    // Initial navigation
+    await page.goto(&#039;https://store.meta.com&#039;);
+
+    // [Evidence: Frame #0 @ 1200ms | Box: (120,80,280x42) | Hash: 5f71b61359d4d9cf112544dd7f7a9ef2cfd6f79f3822b5f972d83aedd77b1ff2]
+    // Spoken Intent: &quot;Search for &quot;Meta Quest 3S&quot; in the catalog&quot;
+    const target_1 = page.locator(&#039;button:has-text(&quot;Search catalog input&quot;), [aria-label=&quot;Search catalog input&quot;], [data-testid=&quot;elem_search&quot;]&#039;).first();
+    await expect(target_1).toBeVisible({ timeout: 5000 });
+    await target_1.click();
+
+    // [Evidence: Frame #1 @ 3500ms | Box: (420,320,160x48) | Hash: aea5bbca590b8539a0740a4fb72483ddda351937e47609133ab68ebccde9b882]
+    // Spoken Intent: &quot;Click Add to Cart to purchase the headset&quot;
+    const target_2 = page.locator(&#039;button:has-text(&quot;Add to Cart button&quot;), [aria-label=&quot;Add to Cart button&quot;], [data-testid=&quot;elem_add_to_cart&quot;]&#039;).first();
+    await expect(target_2).toBeVisible({ timeout: 5000 });
+    await target_2.click();
+
+    // [Evidence: Frame #2 @ 6000ms | Box: (200,150,380x60) | Hash: b47ccb4c94ecf8b33b1155b5cb9e1868658d78391f3ac6819d42bbcf05f9a956]
+    // Spoken Intent: &quot;Verify the order confirmation screen is displayed&quot;
+    await expect(page.locator(&#039;button:has-text(&quot;Order Confirmation #ORD-9821&quot;), [aria-label=&quot;Order Confirmation #ORD-9821&quot;], [data-testid=&quot;elem_order_badge&quot;]&#039;).first()).toBeVisible({ timeout: 5000 });
+
+  });
+});</code></pre>
+    </div>
+
+    <div class="hud-footer">
+      Generated by <strong>ChangeProof</strong> &bull; Meta Global AI Developer Hackathon &bull; 2026-10-27T19:54:55.914Z
+    </div>
+  </div>
+</body>
+</html>

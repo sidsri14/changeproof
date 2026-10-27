@@ -1,6 +1,8 @@
+import * as fs from 'node:fs';
 import { AlignmentEngine } from '../dist/core/alignment_engine.js';
 import { CitationValidator } from '../dist/core/citation_validator.js';
 import { PlaywrightSynthesizer } from '../dist/core/playwright_synthesizer.js';
+import { HudVisualizer } from '../dist/core/hud_visualizer.js';
 
 console.log('='.repeat(70));
 console.log(' 🚀 ChangeProof: Multimodal Playwright Test Synthesis Engine');
@@ -132,4 +134,9 @@ console.log(` -> Suite ID: ${suite.suiteId}`);
 console.log(` -> Generated Code Output Preview:\n` + '-'.repeat(70));
 console.log(suite.playwrightCode);
 console.log('-'.repeat(70));
+
+const hudHtml = HudVisualizer.generateReportHtml(suite, sampleKeyframes);
+fs.writeFileSync('demo/enterprise_sso_hud.html', hudHtml, 'utf-8');
+console.log(` -> Standalone Developer HUD saved: demo/enterprise_sso_hud.html`);
+
 console.log(`\n🎉 Verification Complete! 0 errors, 100% grounded citations.`);

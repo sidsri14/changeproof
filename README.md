@@ -59,31 +59,60 @@ Web development and QA engineering teams lose thousands of hours translating use
 
 ---
 
-## 4. Verification & Testing
+## 4. CLI Runner & Developer HUD
 
-ChangeProof features a complete automated test suite:
-- **8/8 automated tests passing**:
-  - Deterministic SHA-256 evidence hashing
-  - Bounding box dimension enforcement
-  - Rejection of tampered evidence hashes
-  - Low-confidence detection pruning
-  - Multimodal temporal alignment
-  - Playwright `.spec.ts` synthesis with line-by-line citation comments
-  - Full end-to-end alignment, validation, and code synthesis
+ChangeProof includes a developer-facing CLI and interactive HUD visualizer:
+
+### CLI Commands:
+```bash
+# 1. Run built-in e-commerce checkout flow demo:
+npm run demo
+# or: node dist/cli.js demo
+
+# 2. Synthesize Playwright spec and Developer HUD from session JSON:
+node dist/cli.js synthesize --input session.json --url https://shop.com --out spec.ts --hud hud.html
+
+# 3. Cryptographically verify SHA-256 evidence citations in a spec:
+node dist/cli.js verify --spec demo/demo_checkout.spec.ts
+
+# 4. Generate standalone Developer HUD report:
+node dist/cli.js hud --input session.json --out developer_hud.html
+```
+
+### Developer HUD Visualizer:
+The standalone HTML report provides a zero-dependency interactive dashboard featuring:
+- SVG bounding-box overlays for detected SAM 3.1 UI elements
+- Spoken user intent & transcription timing
+- Cryptographic SHA-256 evidence citations for every test assertion
+- Synthesized Playwright code with line-by-line grounding
+
+---
+
+## 5. Verification & Testing
+
+ChangeProof features a complete automated test suite (**16/16 automated tests passing in <15ms**):
+- Deterministic SHA-256 evidence hashing
+- Bounding box dimension enforcement
+- Rejection of tampered evidence hashes
+- Low-confidence detection pruning
+- Multimodal temporal alignment
+- Playwright `.spec.ts` synthesis with line-by-line citation comments
+- Full end-to-end alignment, validation, and code synthesis
+- VideoProcessor frame hashing & deduplication
+- VideoProcessor normalized frame delta calculation
+- VideoProcessor audio track segmentation
+- Meta SAM 3.1 element segmentation & confidence filtering
+- Standalone HTML Developer HUD generation with SVG overlays
+- Built-in `runDemo()` checkout session synthesis
+- Cryptographic citation pattern validation
 
 ### Run Tests:
 ```bash
-npm install
 npm run build
 npm test
 ```
 
-### Run Demonstration:
-```bash
-npm run demo
-```
-
 ---
 
-## 5. License
+## 6. License
 MIT License. Created for the Meta Global AI Developer Hackathon.

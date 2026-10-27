@@ -4,11 +4,15 @@
   "description": "Evidence-grounded multimodal regression-testing agent synthesizing Playwright e2e suites from screen recordings",
   "type": "module",
   "main": "dist/index.js",
+  "bin": {
+    "changeproof": "./dist/cli.js"
+  },
   "scripts": {
     "build": "tsc",
     "typecheck": "tsc --noEmit",
     "test": "node --test tests/*.test.mjs",
-    "demo": "node demo/run_demo.mjs"
+    "cli": "node dist/cli.js",
+    "demo": "node dist/cli.js demo"
   },
   "keywords": [
     "meta",

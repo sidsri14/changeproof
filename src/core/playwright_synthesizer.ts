@@ -30,7 +30,7 @@ export class PlaywrightSynthesizer {
 
     for (const step of steps) {
       const { evidence } = step;
-      const citationComment = `    // [Evidence: Frame #${evidence.frameIndex} @ ${evidence.frameTimestampMs}ms | Box: (${evidence.boundingBox.x},${evidence.boundingBox.y},${evidence.boundingBox.width}x${evidence.boundingBox.height}) | Hash: ${evidence.evidenceHash.substring(0, 12)}...]`;
+      const citationComment = `    // [Evidence: Frame #${evidence.frameIndex} @ ${evidence.frameTimestampMs}ms | Box: (${evidence.boundingBox.x},${evidence.boundingBox.y},${evidence.boundingBox.width}x${evidence.boundingBox.height}) | Hash: ${evidence.evidenceHash}]`;
       const intentComment = `    // Spoken Intent: "${evidence.transcriptSpan.text}"`;
 
       codeLines.push(citationComment);
