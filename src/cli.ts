@@ -16,6 +16,7 @@ import { HudVisualizer } from './core/hud_visualizer.js';
 import { RegressionRunner } from './core/regression_runner.js';
 import { SelectorRepairEngine } from './core/selector_repair_engine.js';
 import { BenchmarkRunner } from './core/benchmark_runner.js';
+import { DemoAssetGenerator } from './core/demo_asset_generator.js';
 import { MultimodalKeyframe, AudioTranscriptSegment, SynthesizedTestSuite } from './types/schema.js';
 
 interface CliArgs {
@@ -37,7 +38,7 @@ function parseArgs(args: string[]): CliArgs {
   const result: CliArgs = {};
   if (args.length === 0) return result;
 
-  const validCommands = ['synthesize', 'verify', 'hud', 'demo', 'test-regression', 'repair', 'benchmark', 'help'];
+  const validCommands = ['synthesize', 'verify', 'hud', 'demo', 'test-regression', 'repair', 'benchmark', 'pack', 'help'];
   let startIndex = 0;
 
   if (validCommands.includes(args[0])) {
@@ -91,6 +92,7 @@ COMMANDS:
   test-regression   Evaluate synthesized assertions against baseline vs regressed web fixtures
   repair            Autonomously heal broken selectors in regressed builds using visual intent heuristics
   benchmark         Run empirical multimodal evaluation suite measuring precision, hallucination & throughput
+  pack              Package all deliverables: interactive studio playground, submission dossier & reports
   help              Display this help message
 
 OPTIONS:
@@ -451,6 +453,22 @@ export function main(): void {
       fs.writeFileSync(mdOut, report.markdownSummary, 'utf-8');
       console.log(`✓ Markdown summary saved to:    ${mdOut}\n`);
 
+      process.exit(0);
+    }
+
+    if (args.command === 'pack') {
+      console.log(`\n======================================================`);
+      console.log(`ChangeProof Submission Packager (Meta Global AI Hackathon)`);
+      console.log(`Generating Interactive Studio, Submission Dossier & Deliverables...`);
+      console.log(`======================================================\n`);
+
+      const packResult = DemoAssetGenerator.generateAllAssets(process.cwd());
+
+      console.log(`[Deliverables Packaged Successfully]`);
+      for (const f of packResult.generatedFiles) {
+        console.log(`  ✓ ${path.relative(process.cwd(), f)}`);
+      }
+      console.log(`\n${packResult.reportSummary}\n`);
       process.exit(0);
     }
 

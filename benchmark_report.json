@@ -1,14 +1,14 @@
 {
-  "benchmarkId": "bm_1793192008024",
-  "runAt": "2026-10-28T12:53:28.038Z",
+  "benchmarkId": "bm_1793193167227",
+  "runAt": "2026-10-28T13:12:47.234Z",
   "totalSessions": 4,
   "totalActionsEvaluated": 16,
   "overallGroundingPrecision": 100,
   "overallHallucinationRate": 0,
   "overallSelfHealingAccuracy": 100,
-  "avgAlignmentLatencyMs": 0.34,
-  "avgSynthesisLatencyMs": 0.32,
-  "avgThroughputActionsPerSec": 1258,
+  "avgAlignmentLatencyMs": 0.11,
+  "avgSynthesisLatencyMs": 0.02,
+  "avgThroughputActionsPerSec": 2694,
   "sessionResults": [
     {
       "sessionId": "scenario_checkout",
@@ -17,8 +17,8 @@
       "groundedSteps": 3,
       "hallucinatedSteps": 0,
       "groundingPrecision": 100,
-      "alignmentDurationMs": 0.76,
-      "synthesisDurationMs": 1.17,
+      "alignmentDurationMs": 0.1,
+      "synthesisDurationMs": 0.03,
       "regressionCaught": true,
       "healedStepsCount": 3,
       "selfHealingAccuracy": 100
@@ -30,8 +30,8 @@
       "groundedSteps": 5,
       "hallucinatedSteps": 0,
       "groundingPrecision": 100,
-      "alignmentDurationMs": 0.4,
-      "synthesisDurationMs": 0.04
+      "alignmentDurationMs": 0.26,
+      "synthesisDurationMs": 0.03
     },
     {
       "sessionId": "scenario_api_keys",
@@ -40,8 +40,8 @@
       "groundedSteps": 4,
       "hallucinatedSteps": 0,
       "groundingPrecision": 100,
-      "alignmentDurationMs": 0.12,
-      "synthesisDurationMs": 0.03
+      "alignmentDurationMs": 0.04,
+      "synthesisDurationMs": 0.01
     },
     {
       "sessionId": "scenario_analytics_dashboard",
@@ -50,9 +50,9 @@
       "groundedSteps": 4,
       "hallucinatedSteps": 0,
       "groundingPrecision": 100,
-      "alignmentDurationMs": 0.07,
-      "synthesisDurationMs": 0.02
+      "alignmentDurationMs": 0.03,
+      "synthesisDurationMs": 0.01
     }
   ],
-  "markdownSummary": "# ChangeProof 🛡️ Empirical Benchmark Report\n**Meta Global AI Developer Hackathon ($1,000,000 Aggregate Prize Pool)**  \n*Run ID*: `bm_1793192008024` | *Timestamp*: `2026-10-28T12:53:28.037Z`\n\n---\n\n## 1. Executive Summary\n\n| Metric | Measured Value | Target SLA | Verdict |\n| :--- | :---: | :---: | :---: |\n| **Grounding Precision** | **100.0%** | $ge 99.0%$ | ✅ **EXCEEDS** |\n| **Hallucination Rate** | **0.00%** | $0.00%$ | ✅ **ZERO DRIFT** |\n| **Self-Healing Recovery** | **100.0%** | $ge 90.0%$ | ✅ **RESILIENT** |\n| **Avg Alignment Latency** | **0.34ms** | $<10.0\\text{ms}$ | ✅ **SUB-MILLISECOND** |\n| **Avg Synthesis Latency** | **0.32ms** | $<10.0\\text{ms}$ | ✅ **SUB-MILLISECOND** |\n| **Throughput** | **1258 actions/sec** | $>100\\text{ actions/sec}$ | ✅ **ENTERPRISE GRADE** |\n\n---\n\n## 2. Scenario-by-Scenario Evaluation\n\n| Scenario ID | Test Workflow | Steps | Grounded | Hallucinated | Precision | Align (ms) | Synth (ms) | Self-Healed |\n| :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |\n| `scenario_checkout` | E-Commerce Quest 3S Checkout Flow | 3 | 3 | 0 | 100.0% | 0.76ms | 1.17ms | 3 (100%) |\n| `scenario_enterprise_sso` | Enterprise SSO Authentication & Dashboard Flow | 5 | 5 | 0 | 100.0% | 0.4ms | 0.04ms | N/A |\n| `scenario_api_keys` | Developer Portal API Key Lifecycle Management | 4 | 4 | 0 | 100.0% | 0.12ms | 0.03ms | N/A |\n| `scenario_analytics_dashboard` | Real-Time Telemetry & Range Filter Assertion | 4 | 4 | 0 | 100.0% | 0.07ms | 0.02ms | N/A |\n\n---\n\n## 3. Mathematical Verification Guarantees\n\n1. **Deterministic Cryptographic Grounding**: Every Playwright action (`click`, `fill`, `expect`) is strictly bound via SHA-256 to SAM 3.1 bounding boxes $[x, y, w, h]$ and temporal keyframe timestamps.\n2. **Fail-Closed Policy Enforcement**: Actions with confidence $<0.50$ or invalid geometry are rejected before synthesis, guaranteeing $0.00\\%$ hallucinated selectors.\n3. **Cryptographic Migration Proofs**: In self-healing scenarios, every updated selector emits an immutable migration hash linking original evidence to the repaired locator.\n"
+  "markdownSummary": "# ChangeProof 🛡️ Empirical Benchmark Report\n**Meta Global AI Developer Hackathon ($1,000,000 Aggregate Prize Pool)**  \n*Run ID*: `bm_1793193167227` | *Timestamp*: `2026-10-28T13:12:47.233Z`\n\n---\n\n## 1. Executive Summary\n\n| Metric | Measured Value | Target SLA | Verdict |\n| :--- | :---: | :---: | :---: |\n| **Grounding Precision** | **100.0%** | $ge 99.0%$ | ✅ **EXCEEDS** |\n| **Hallucination Rate** | **0.00%** | $0.00%$ | ✅ **ZERO DRIFT** |\n| **Self-Healing Recovery** | **100.0%** | $ge 90.0%$ | ✅ **RESILIENT** |\n| **Avg Alignment Latency** | **0.11ms** | $<10.0\\text{ms}$ | ✅ **SUB-MILLISECOND** |\n| **Avg Synthesis Latency** | **0.02ms** | $<10.0\\text{ms}$ | ✅ **SUB-MILLISECOND** |\n| **Throughput** | **2694 actions/sec** | $>100\\text{ actions/sec}$ | ✅ **ENTERPRISE GRADE** |\n\n---\n\n## 2. Scenario-by-Scenario Evaluation\n\n| Scenario ID | Test Workflow | Steps | Grounded | Hallucinated | Precision | Align (ms) | Synth (ms) | Self-Healed |\n| :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |\n| `scenario_checkout` | E-Commerce Quest 3S Checkout Flow | 3 | 3 | 0 | 100.0% | 0.1ms | 0.03ms | 3 (100%) |\n| `scenario_enterprise_sso` | Enterprise SSO Authentication & Dashboard Flow | 5 | 5 | 0 | 100.0% | 0.26ms | 0.03ms | N/A |\n| `scenario_api_keys` | Developer Portal API Key Lifecycle Management | 4 | 4 | 0 | 100.0% | 0.04ms | 0.01ms | N/A |\n| `scenario_analytics_dashboard` | Real-Time Telemetry & Range Filter Assertion | 4 | 4 | 0 | 100.0% | 0.03ms | 0.01ms | N/A |\n\n---\n\n## 3. Mathematical Verification Guarantees\n\n1. **Deterministic Cryptographic Grounding**: Every Playwright action (`click`, `fill`, `expect`) is strictly bound via SHA-256 to SAM 3.1 bounding boxes $[x, y, w, h]$ and temporal keyframe timestamps.\n2. **Fail-Closed Policy Enforcement**: Actions with confidence $<0.50$ or invalid geometry are rejected before synthesis, guaranteeing $0.00\\%$ hallucinated selectors.\n3. **Cryptographic Migration Proofs**: In self-healing scenarios, every updated selector emits an immutable migration hash linking original evidence to the repaired locator.\n"
 }

@@ -9,6 +9,7 @@ import { HudVisualizer } from '../dist/core/hud_visualizer.js';
 import { RegressionRunner } from '../dist/core/regression_runner.js';
 import { SelectorRepairEngine } from '../dist/core/selector_repair_engine.js';
 import { BenchmarkRunner } from '../dist/core/benchmark_runner.js';
+import { DemoAssetGenerator } from '../dist/core/demo_asset_generator.js';
 import { runDemo } from '../dist/cli.js';
 import * as path from 'node:path';
 import * as fs from 'node:fs';
@@ -680,6 +681,41 @@ describe('ChangeProof: Multimodal Playwright Test Synthesis Engine', () => {
     assert.ok(md.includes('Scenario-by-Scenario Evaluation'));
     assert.ok(md.includes('scenario_enterprise_sso'));
     assert.ok(md.includes('Mathematical Verification Guarantees'));
+  });
+
+  test('Test 32: DemoAssetGenerator.generatePlaygroundHtml generates interactive studio with SAM 3.1 SVG overlays', () => {
+    const { suite } = runDemo();
+    const html = DemoAssetGenerator.generatePlaygroundHtml(suite);
+
+    assert.ok(html.includes('<!DOCTYPE html>'));
+    assert.ok(html.includes('ChangeProof Interactive Studio'));
+    assert.ok(html.includes('SAM 3.1: 94%'));
+    assert.ok(html.includes('simulateRegression'));
+    assert.ok(html.includes('triggerSelfHealing'));
+    assert.ok(html.includes('Meta Quest 3S (128GB)'));
+  });
+
+  test('Test 33: DemoAssetGenerator.generateSubmissionDossier creates official dossier with Mermaid architecture', () => {
+    const report = BenchmarkRunner.runBenchmark();
+    const dossier = DemoAssetGenerator.generateSubmissionDossier(report);
+
+    assert.ok(dossier.includes('# ChangeProof 🛡️ — Official Hackathon Submission Dossier'));
+    assert.ok(dossier.includes('flowchart TD'));
+    assert.ok(dossier.includes('Meta SAM 3.1 Adapter'));
+    assert.ok(dossier.includes('Empirical Benchmarks (Verified SLAs)'));
+    assert.ok(dossier.includes('Reproducible Verification Commands'));
+  });
+
+  test('Test 34: DemoAssetGenerator.generateAllAssets packages all 6 submission deliverables', () => {
+    const result = DemoAssetGenerator.generateAllAssets(path.resolve('.'));
+
+    assert.equal(result.generatedFiles.length, 6);
+    assert.ok(result.totalGeneratedBytes > 10000);
+    assert.ok(result.reportSummary.includes('Ready for judging presentation'));
+
+    assert.ok(fs.existsSync(path.resolve('demo/playground.html')));
+    assert.ok(fs.existsSync(path.resolve('docs/index.html')));
+    assert.ok(fs.existsSync(path.resolve('docs/SUBMISSION_DOSSIER.md')));
   });
 
 });

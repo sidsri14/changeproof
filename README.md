@@ -3,7 +3,7 @@
 
 [![ChangeProof CI](https://github.com/sidsri14/changeproof/actions/workflows/ci.yml/badge.svg)](https://github.com/sidsri14/changeproof/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Tests: 31 Passing](https://img.shields.io/badge/Tests-31%20Passing-brightgreen.svg)](tests/)
+[![Tests: 34 Passing](https://img.shields.io/badge/Tests-34%20Passing-brightgreen.svg)](tests/)
 [![Grounding Precision: 100%](https://img.shields.io/badge/Grounding%20Precision-100%25-success.svg)](benchmark_report.md)
 [![Hallucination Rate: 0.00%](https://img.shields.io/badge/Hallucination%20Rate-0.00%25-success.svg)](benchmark_report.md)
 
@@ -93,7 +93,11 @@ npm run test:repair
 npm run benchmark
 # or: node dist/cli.js benchmark --out benchmark_report.json --markdown benchmark_report.md
 
-# 7. Generate standalone Developer HUD report:
+# 7. Package complete submission dossier & interactive playground:
+npm run pack
+# or: node dist/cli.js pack
+
+# 8. Generate standalone Developer HUD report:
 node dist/cli.js hud --input session.json --out developer_hud.html
 ```
 
@@ -179,6 +183,9 @@ ChangeProof features a complete automated test suite (**31/31 automated tests pa
 - Sub-millisecond latency & high-throughput validation
 - Scenario-by-scenario empirical granularity
 - Automated GitHub-flavored markdown benchmark report generation
+- `DemoAssetGenerator.generatePlaygroundHtml()` zero-dependency interactive studio generation
+- `DemoAssetGenerator.generateSubmissionDossier()` comprehensive hackathon dossier & Mermaid architecture
+- `DemoAssetGenerator.generateAllAssets()` automated packaging of all 6 submission deliverables
 
 ### Run Tests:
 ```bash
@@ -187,6 +194,7 @@ npm test
 npm run test:regression
 npm run test:repair
 npm run benchmark
+npm run pack
 ```
 
 ---
