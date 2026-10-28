@@ -1,4 +1,19 @@
-# ChangeProof 🛡️ — 3-Minute Video Presentation Script
+# DRAFT — DO NOT RECORD OR SUBMIT
+
+The legacy narration below contains unsupported live SAM 3.1, raw recording,
+speech-transcription, cryptographic-authenticity, browser E2E, confidence,
+benchmark/SLA, and production-readiness claims. It is not approved narration or
+evidence of a real Meta-model run. The current UI is a scripted synthetic preview.
+
+Retain this draft only for factual reconciliation. Before recording, replace its
+claims with observed capabilities and explicit fixture/simulation disclosures,
+and review the resulting script. See [integration status](../docs/INTEGRATION_STATUS.md)
+and the current README. Do not use the old 55%-to-95% confidence story or broad
+100%/zero-hallucination guarantees as measured results.
+
+---
+
+# Legacy script body — unverified draft
 ### Meta Global AI Developer Hackathon ($1,000,000 Aggregate Prize Pool)
 **Host**: Cerebral Valley & Meta  
 **Project**: ChangeProof (Multimodal Regression-Testing Agent)  
