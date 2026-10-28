@@ -115,3 +115,33 @@ export interface SuiteRepairResult {
   };
 }
 
+export interface BenchmarkSessionResult {
+  sessionId: string;
+  sessionName: string;
+  totalSteps: number;
+  groundedSteps: number;
+  hallucinatedSteps: number;
+  groundingPrecision: number;
+  alignmentDurationMs: number;
+  synthesisDurationMs: number;
+  regressionCaught?: boolean;
+  healedStepsCount?: number;
+  selfHealingAccuracy?: number;
+}
+
+export interface BenchmarkReport {
+  benchmarkId: string;
+  runAt: string;
+  totalSessions: number;
+  totalActionsEvaluated: number;
+  overallGroundingPrecision: number;
+  overallHallucinationRate: number;
+  overallSelfHealingAccuracy: number;
+  avgAlignmentLatencyMs: number;
+  avgSynthesisLatencyMs: number;
+  avgThroughputActionsPerSec: number;
+  sessionResults: BenchmarkSessionResult[];
+  markdownSummary: string;
+}
+
+

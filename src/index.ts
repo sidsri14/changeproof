@@ -12,5 +12,6 @@ export {
   type ReleaseComparisonReport 
 } from './core/regression_runner.js';
 export { SelectorRepairEngine } from './core/selector_repair_engine.js';
+export { BenchmarkRunner, type BenchmarkScenario } from './core/benchmark_runner.js';
 export { runDemo } from './cli.js';
 

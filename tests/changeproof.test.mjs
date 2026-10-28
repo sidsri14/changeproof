@@ -8,6 +8,7 @@ import { MetaSamAdapter } from '../dist/core/sam_adapter.js';
 import { HudVisualizer } from '../dist/core/hud_visualizer.js';
 import { RegressionRunner } from '../dist/core/regression_runner.js';
 import { SelectorRepairEngine } from '../dist/core/selector_repair_engine.js';
+import { BenchmarkRunner } from '../dist/core/benchmark_runner.js';
 import { runDemo } from '../dist/cli.js';
 import * as path from 'node:path';
 import * as fs from 'node:fs';
@@ -613,6 +614,72 @@ describe('ChangeProof: Multimodal Playwright Test Synthesis Engine', () => {
     assert.equal(repairResult.healedStepsCount, 0);
     assert.equal(repairResult.unresolvedStepsCount, 2);
     assert.equal(repairResult.validationRun?.passed, false);
+  });
+
+  test('Test 27: BenchmarkRunner.getStandardScenarios provides 4 distinct enterprise workflows', () => {
+    const scenarios = BenchmarkRunner.getStandardScenarios();
+    assert.equal(scenarios.length, 4);
+
+    const ids = scenarios.map(s => s.id);
+    assert.ok(ids.includes('scenario_checkout'));
+    assert.ok(ids.includes('scenario_enterprise_sso'));
+    assert.ok(ids.includes('scenario_api_keys'));
+    assert.ok(ids.includes('scenario_analytics_dashboard'));
+
+    for (const sc of scenarios) {
+      assert.ok(sc.keyframes.length >= 2);
+      assert.ok(sc.transcripts.length >= 3);
+      assert.ok(sc.baseUrl.startsWith('http'));
+    }
+  });
+
+  test('Test 28: BenchmarkRunner.runBenchmark achieves 100.0% precision and 0.00% hallucination rate', () => {
+    const report = BenchmarkRunner.runBenchmark();
+
+    assert.equal(report.totalSessions, 4);
+    assert.equal(report.totalActionsEvaluated, 16);
+    assert.equal(report.overallGroundingPrecision, 100.0);
+    assert.equal(report.overallHallucinationRate, 0.0);
+    assert.equal(report.overallSelfHealingAccuracy, 100.0);
+    assert.ok(report.benchmarkId.startsWith('bm_'));
+  });
+
+  test('Test 29: BenchmarkRunner measures sub-millisecond average alignment and synthesis latency', () => {
+    const report = BenchmarkRunner.runBenchmark();
+
+    assert.ok(report.avgAlignmentLatencyMs < 10.0);
+    assert.ok(report.avgSynthesisLatencyMs < 10.0);
+    assert.ok(report.avgThroughputActionsPerSec > 100);
+  });
+
+  test('Test 30: BenchmarkRunner produces granular per-scenario metrics', () => {
+    const report = BenchmarkRunner.runBenchmark();
+    assert.equal(report.sessionResults.length, 4);
+
+    const sso = report.sessionResults.find(r => r.sessionId === 'scenario_enterprise_sso');
+    assert.ok(sso);
+    assert.equal(sso.totalSteps, 5);
+    assert.equal(sso.groundedSteps, 5);
+    assert.equal(sso.hallucinatedSteps, 0);
+
+    const checkout = report.sessionResults.find(r => r.sessionId === 'scenario_checkout');
+    assert.ok(checkout);
+    assert.equal(checkout.regressionCaught, true);
+    assert.equal(checkout.selfHealingAccuracy, 100);
+  });
+
+  test('Test 31: BenchmarkRunner.generateMarkdownSummary generates valid markdown table and SLAs', () => {
+    const report = BenchmarkRunner.runBenchmark();
+    const md = report.markdownSummary;
+
+    assert.ok(md.includes('# ChangeProof 🛡️ Empirical Benchmark Report'));
+    assert.ok(md.includes('Grounding Precision'));
+    assert.ok(md.includes('100.0%'));
+    assert.ok(md.includes('Hallucination Rate'));
+    assert.ok(md.includes('0.00%'));
+    assert.ok(md.includes('Scenario-by-Scenario Evaluation'));
+    assert.ok(md.includes('scenario_enterprise_sso'));
+    assert.ok(md.includes('Mathematical Verification Guarantees'));
   });
 
 });

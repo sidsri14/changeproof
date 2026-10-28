@@ -15,6 +15,7 @@ import { PlaywrightSynthesizer } from './core/playwright_synthesizer.js';
 import { HudVisualizer } from './core/hud_visualizer.js';
 import { RegressionRunner } from './core/regression_runner.js';
 import { SelectorRepairEngine } from './core/selector_repair_engine.js';
+import { BenchmarkRunner } from './core/benchmark_runner.js';
 import { MultimodalKeyframe, AudioTranscriptSegment, SynthesizedTestSuite } from './types/schema.js';
 
 interface CliArgs {
@@ -28,6 +29,7 @@ interface CliArgs {
   manifest?: string;
   baseline?: string;
   candidate?: string;
+  markdown?: string;
   help?: boolean;
 }
 
@@ -35,7 +37,7 @@ function parseArgs(args: string[]): CliArgs {
   const result: CliArgs = {};
   if (args.length === 0) return result;
 
-  const validCommands = ['synthesize', 'verify', 'hud', 'demo', 'test-regression', 'repair', 'help'];
+  const validCommands = ['synthesize', 'verify', 'hud', 'demo', 'test-regression', 'repair', 'benchmark', 'help'];
   let startIndex = 0;
 
   if (validCommands.includes(args[0])) {
@@ -65,6 +67,8 @@ function parseArgs(args: string[]): CliArgs {
       result.baseline = args[++i];
     } else if (arg === '--candidate' || arg === '--regression' || arg === '-c') {
       result.candidate = args[++i];
+    } else if (arg === '--markdown' || arg === '--md') {
+      result.markdown = args[++i];
     }
   }
 
@@ -86,22 +90,26 @@ COMMANDS:
   demo              Run a built-in end-to-end checkout demo session with sample SAM 3.1 elements
   test-regression   Evaluate synthesized assertions against baseline vs regressed web fixtures
   repair            Autonomously heal broken selectors in regressed builds using visual intent heuristics
+  benchmark         Run empirical multimodal evaluation suite measuring precision, hallucination & throughput
   help              Display this help message
 
 OPTIONS:
   -i, --input <file>        Path to multimodal session JSON (keyframes + transcripts)
   -u, --url <url>           Base URL under test (e.g. https://shop.example.com)
   -n, --name <name>         Name of the test suite (default: "ChangeProof E2E Test")
-  -o, --out <file>          Output file path for generated Playwright spec (.ts)
+  -o, --out <file>          Output file path for generated spec or benchmark JSON report
   --hud <file>              Output file path for Developer HUD HTML report (.html)
   --spec <file>             Playwright spec file to verify against evidence manifest
   -b, --baseline <file>     Baseline application HTML snapshot (default: fixtures/sample_app/v1_baseline.html)
   -c, --candidate <file>    Candidate/Regression HTML snapshot (default: fixtures/sample_app/v2_regression.html)
+  --markdown, --md <file>   Output file path for benchmark markdown report (.md)
   -h, --help                Show help documentation
 
 EXAMPLES:
   changeproof synthesize --input session.json --url https://shop.com --out checkout.spec.ts --hud hud.html
   changeproof test-regression --baseline fixtures/sample_app/v1_baseline.html --candidate fixtures/sample_app/v2_regression.html
+  changeproof repair --candidate fixtures/sample_app/v4_complete_redesign.html --out demo/healed_checkout.spec.ts
+  changeproof benchmark --out benchmark_report.json --markdown benchmark_report.md
   changeproof hud --input session.json --out developer_hud.html
   changeproof demo
 `);
@@ -413,6 +421,35 @@ export function main(): void {
       fs.writeFileSync(outPath, repairResult.healedSuite.playwrightCode, 'utf-8');
       console.log(`\n✓ Healed Playwright spec written to: ${outPath}`);
       console.log(`  All repairs embedded with cryptographic migration proof comments.`);
+
+      process.exit(0);
+    }
+
+    if (args.command === 'benchmark') {
+      console.log(`\n======================================================`);
+      console.log(`ChangeProof Empirical Benchmark Suite (Meta Global AI Hackathon)`);
+      console.log(`Evaluating Multimodal Grounding Precision, Drift & Throughput...`);
+      console.log(`======================================================\n`);
+
+      const report = BenchmarkRunner.runBenchmark();
+
+      console.log(`[Empirical Results Summary]`);
+      console.log(`  Total Scenarios Evaluated:     ${report.totalSessions}`);
+      console.log(`  Total Actions Evaluated:       ${report.totalActionsEvaluated}`);
+      console.log(`  Grounding Precision:           ${report.overallGroundingPrecision.toFixed(1)}% (Target: 100%)`);
+      console.log(`  Hallucination Rate:            ${report.overallHallucinationRate.toFixed(2)}% (Target: 0.00%)`);
+      console.log(`  Self-Healing Recovery:         ${report.overallSelfHealingAccuracy.toFixed(1)}% (Target: >=90%)`);
+      console.log(`  Avg Alignment Latency:         ${report.avgAlignmentLatencyMs}ms`);
+      console.log(`  Avg Synthesis Latency:         ${report.avgSynthesisLatencyMs}ms`);
+      console.log(`  Throughput:                    ${report.avgThroughputActionsPerSec} actions/sec`);
+
+      const jsonOut = args.out || 'benchmark_report.json';
+      fs.writeFileSync(jsonOut, JSON.stringify(report, null, 2), 'utf-8');
+      console.log(`\n✓ Full JSON report saved to:     ${jsonOut}`);
+
+      const mdOut = args.markdown || 'benchmark_report.md';
+      fs.writeFileSync(mdOut, report.markdownSummary, 'utf-8');
+      console.log(`✓ Markdown summary saved to:    ${mdOut}\n`);
 
       process.exit(0);
     }

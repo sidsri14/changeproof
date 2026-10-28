@@ -14,6 +14,7 @@
     "test:regression": "node dist/cli.js test-regression",
     "test:repair": "node dist/cli.js repair --candidate fixtures/sample_app/v4_complete_redesign.html",
     "repair": "node dist/cli.js repair",
+    "benchmark": "node dist/cli.js benchmark",
     "cli": "node dist/cli.js",
     "demo": "node dist/cli.js demo"
 
