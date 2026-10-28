@@ -10,7 +10,7 @@
   "scripts": {
     "build": "tsc",
     "typecheck": "tsc --noEmit",
-    "test": "node --test tests/*.test.mjs",
+    "test": "node --test",
     "test:regression": "node dist/cli.js test-regression",
     "test:repair": "node dist/cli.js repair --candidate fixtures/sample_app/v4_complete_redesign.html",
     "repair": "node dist/cli.js repair",
