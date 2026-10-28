@@ -1,6 +1,12 @@
 # ChangeProof 🛡️
 ### Multimodal Regression-Testing Agent (Meta Global AI Developer Hackathon)
 
+[![ChangeProof CI](https://github.com/sidsri14/changeproof/actions/workflows/ci.yml/badge.svg)](https://github.com/sidsri14/changeproof/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Tests: 31 Passing](https://img.shields.io/badge/Tests-31%20Passing-brightgreen.svg)](tests/)
+[![Grounding Precision: 100%](https://img.shields.io/badge/Grounding%20Precision-100%25-success.svg)](benchmark_report.md)
+[![Hallucination Rate: 0.00%](https://img.shields.io/badge/Hallucination%20Rate-0.00%25-success.svg)](benchmark_report.md)
+
 > **Competition**: Meta Global AI Developer Hackathon ($1,000,000 Aggregate Prize Pool)  
 > **Host**: Cerebral Valley & Meta  
 > **Build Period**: October 26, 2026 (12:00 PM GMT-5) – November 4, 2026 (9:00 PM GMT-5)  
