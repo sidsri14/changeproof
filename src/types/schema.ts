@@ -77,3 +77,41 @@ export interface AudioTranscriptSegment {
   intent: 'action' | 'assertion' | 'navigation' | 'commentary';
   targetElementDescription?: string;
 }
+
+export interface CandidateElement {
+  tag: string;
+  id?: string;
+  className?: string;
+  dataTestId?: string;
+  ariaLabel?: string;
+  textContent: string;
+  isDisabled: boolean;
+  boundingBox?: BoundingBox;
+  compositeSelector: string;
+}
+
+export interface SelectorRepairProposal {
+  stepIndex: number;
+  originalSelector: string;
+  repairedSelector: string;
+  confidence: number;
+  reasons: string[];
+  matchedElement: CandidateElement;
+  repairProofHash: string;
+}
+
+export interface SuiteRepairResult {
+  suiteId: string;
+  originalSuiteName: string;
+  repairedAt: string;
+  totalFailedSteps: number;
+  healedStepsCount: number;
+  unresolvedStepsCount: number;
+  repairs: SelectorRepairProposal[];
+  healedSuite: SynthesizedTestSuite;
+  validationRun?: {
+    passed: boolean;
+    durationMs: number;
+  };
+}
+

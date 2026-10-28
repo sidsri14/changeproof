@@ -11,5 +11,6 @@ export {
   type RegressionEvaluationResult, 
   type ReleaseComparisonReport 
 } from './core/regression_runner.js';
+export { SelectorRepairEngine } from './core/selector_repair_engine.js';
 export { runDemo } from './cli.js';
 

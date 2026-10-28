@@ -79,7 +79,11 @@ node dist/cli.js synthesize --input session.json --url https://shop.com --out sp
 # 4. Cryptographically verify SHA-256 evidence citations in a spec:
 node dist/cli.js verify --spec demo/demo_checkout.spec.ts
 
-# 5. Generate standalone Developer HUD report:
+# 5. Autonomously heal broken selectors against refactored builds:
+npm run test:repair
+# or: node dist/cli.js repair --candidate fixtures/sample_app/v4_complete_redesign.html --out demo/healed_checkout.spec.ts
+
+# 6. Generate standalone Developer HUD report:
 node dist/cli.js hud --input session.json --out developer_hud.html
 ```
 
@@ -97,6 +101,7 @@ The standalone HTML report provides a zero-dependency interactive dashboard feat
 ChangeProof includes an automated `RegressionRunner` engine and evolving sample app fixtures (`fixtures/sample_app/`):
 - `v1_baseline.html`: Pristine baseline e-commerce checkout release.
 - `v2_regression.html`: Injected subtle regressions (mutated CTA testids, disabled button state, broken confirmation badges).
+- `v4_complete_redesign.html`: Complete redesign build with shifted DOM hierarchies, renamed testids, and updated action copy.
 
 When evaluating releases, ChangeProof checks each grounded action and assertion:
 - Resolves composite Playwright selectors (`data-testid`, `aria-label`, `:has-text()`, `#id`, `.class`).
@@ -106,9 +111,20 @@ When evaluating releases, ChangeProof checks each grounded action and assertion:
 
 ---
 
-## 6. Verification & Testing
+## 6. Autonomous Self-Healing Test Engine (`SelectorRepairEngine`)
 
-ChangeProof features a complete automated test suite (**21/21 automated tests passing in <20ms**):
+When UI components undergo design refactors, traditional e2e suites fail due to **selector drift**. ChangeProof autonomously heals broken tests without sacrificing cryptographic integrity:
+1. **Interactive Element Ingestion**: Extracts candidate DOM elements, attributes (`data-testid`, `aria-label`, `#id`), and cleaned text.
+2. **Multimodal Similarity Matching**: Evaluates candidates against the original recorded voice intent, target action roles, and attribute semantic stems.
+3. **Cryptographic Repair Proof**: Every healed step receives a verifiable SHA-256 migration proof linking the original multimodal evidence hash directly to the repaired locator.
+4. **Automated Migration Annotations**: Emits clean, readable migration comments directly into the synthesized `.spec.ts` suite.
+5. **Fail-Closed Integrity**: Distinguishes between legitimate UI redesigns and genuine functional regressions (refuses to heal to disabled elements or ungrounded locators).
+
+---
+
+## 7. Verification & Testing
+
+ChangeProof features a complete automated test suite (**26/26 automated tests passing in <30ms**):
 - Deterministic SHA-256 evidence hashing
 - Bounding box dimension enforcement
 - Rejection of tampered evidence hashes
@@ -128,16 +144,22 @@ ChangeProof features a complete automated test suite (**21/21 automated tests pa
 - `compareReleases()` baseline vs candidate comparison report & root cause analysis
 - Disabled element detection during click action
 - Missing text assertion detection
+- `extractCandidates()` DOM element and composite selector extraction
+- `computeMatchScore()` multi-attribute confidence scoring
+- `repairStep()` deterministic SHA-256 repair proof hash generation
+- `repairSuite()` end-to-end healing against `v4_complete_redesign.html` (100% assertions green post-repair)
+- Fail-closed refusal to heal low-confidence or disabled elements on `v2_regression.html`
 
 ### Run Tests:
 ```bash
 npm run build
 npm test
 npm run test:regression
+npm run test:repair
 ```
 
 ---
 
-## 7. License
+## 8. License
 
 MIT License. Created for the Meta Global AI Developer Hackathon.

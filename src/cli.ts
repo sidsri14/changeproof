@@ -14,6 +14,7 @@ import { CitationValidator } from './core/citation_validator.js';
 import { PlaywrightSynthesizer } from './core/playwright_synthesizer.js';
 import { HudVisualizer } from './core/hud_visualizer.js';
 import { RegressionRunner } from './core/regression_runner.js';
+import { SelectorRepairEngine } from './core/selector_repair_engine.js';
 import { MultimodalKeyframe, AudioTranscriptSegment, SynthesizedTestSuite } from './types/schema.js';
 
 interface CliArgs {
@@ -34,7 +35,7 @@ function parseArgs(args: string[]): CliArgs {
   const result: CliArgs = {};
   if (args.length === 0) return result;
 
-  const validCommands = ['synthesize', 'verify', 'hud', 'demo', 'test-regression', 'help'];
+  const validCommands = ['synthesize', 'verify', 'hud', 'demo', 'test-regression', 'repair', 'help'];
   let startIndex = 0;
 
   if (validCommands.includes(args[0])) {
@@ -84,6 +85,7 @@ COMMANDS:
   hud               Generate a standalone interactive Developer HUD visualizer from a session
   demo              Run a built-in end-to-end checkout demo session with sample SAM 3.1 elements
   test-regression   Evaluate synthesized assertions against baseline vs regressed web fixtures
+  repair            Autonomously heal broken selectors in regressed builds using visual intent heuristics
   help              Display this help message
 
 OPTIONS:
@@ -363,6 +365,54 @@ export function main(): void {
       } else {
         console.log(`\n✓ No visual or structural regressions detected between builds.\n`);
       }
+
+      process.exit(0);
+    }
+
+    if (args.command === 'repair') {
+      const candidateFile = args.candidate || path.join(process.cwd(), 'fixtures/sample_app/v2_regression.html');
+
+      if (!fs.existsSync(candidateFile)) {
+        console.error(`Error: Candidate fixture not found: ${candidateFile}`);
+        process.exit(1);
+      }
+
+      let suite: SynthesizedTestSuite;
+      if (args.input) {
+        const raw = fs.readFileSync(path.resolve(args.input), 'utf-8');
+        const session = JSON.parse(raw);
+        const steps = AlignmentEngine.alignSession(session.keyframes || [], session.transcripts || []);
+        suite = PlaywrightSynthesizer.synthesizeSuite(args.name || session.testName || 'Regression Test Suite', args.url || 'https://localhost:3000', steps);
+      } else {
+        const demo = runDemo();
+        suite = demo.suite;
+      }
+
+      console.log(`\n======================================================`);
+      console.log(`ChangeProof Self-Healing Engine: Repairing Broken Selectors`);
+      console.log(`Suite: ${suite.testName} on ${path.basename(candidateFile)}`);
+      console.log(`======================================================\n`);
+
+      const repairResult = SelectorRepairEngine.repairSuite(suite, candidateFile);
+
+      console.log(`[Self-Healing Repair Summary]`);
+      console.log(`  Broken Steps Detected: ${repairResult.totalFailedSteps}`);
+      console.log(`  Healed Steps:          ${repairResult.healedStepsCount}`);
+      console.log(`  Unresolved:            ${repairResult.unresolvedStepsCount}`);
+
+      for (const repair of repairResult.repairs) {
+        console.log(`\n  ✓ Healed Step #${repair.stepIndex}:`);
+        console.log(`    - Original:   ${repair.originalSelector}`);
+        console.log(`    - Healed:     ${repair.repairedSelector}`);
+        console.log(`    - Confidence: ${(repair.confidence * 100).toFixed(0)}%`);
+        console.log(`    - Proof:      ${repair.repairProofHash.substring(0, 16)}...`);
+        console.log(`    - Rationales: ${repair.reasons.join('; ')}`);
+      }
+
+      const outPath = args.out || 'demo/healed_checkout.spec.ts';
+      fs.writeFileSync(outPath, repairResult.healedSuite.playwrightCode, 'utf-8');
+      console.log(`\n✓ Healed Playwright spec written to: ${outPath}`);
+      console.log(`  All repairs embedded with cryptographic migration proof comments.`);
 
       process.exit(0);
     }

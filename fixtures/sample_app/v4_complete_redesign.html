@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Meta Store - Quest 3S Checkout (Complete Redesign v4)</title>
+  <style>
+    :root {
+      --primary: #0064e0;
+      --bg: #0a0c10;
+      --card-bg: #161b22;
+      --border: #30363d;
+      --text: #f0f6fc;
+      --success: #3fb950;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background-color: var(--bg); color: var(--text); padding: 40px 20px; display: flex; justify-content: center; }
+    .store-container { max-width: 720px; width: 100%; }
+    header { margin-bottom: 24px; border-bottom: 1px solid var(--border); padding-bottom: 16px; }
+    .search-input { width: 100%; padding: 12px 16px; border-radius: 8px; border: 1px solid var(--border); background: var(--card-bg); color: var(--text); font-size: 15px; margin: 20px 0; }
+    .product-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; }
+    .btn-checkout { background: var(--primary); color: #fff; border: none; padding: 12px 24px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; }
+    .order-banner { display: inline-flex; align-items: center; gap: 8px; font-weight: 600; color: var(--success); font-size: 16px; margin-top: 20px; }
+  </style>
+</head>
+<body>
+  <div class="store-container">
+    <header>
+      <h1>Meta Store Checkout <span style="font-size: 12px; color: #58a6ff;">v4.0.0 Complete Redesign</span></h1>
+    </header>
+
+    <!-- Search input refactored with new testid and placeholder -->
+    <input 
+      type="text" 
+      class="search-input" 
+      id="catalog-query-input" 
+      data-testid="catalog_query_input" 
+      placeholder="Search for Meta Quest headsets..." 
+      value="Meta Quest 3S"
+    />
+
+    <div class="product-card" id="card-quest-3s">
+      <div>
+        <h2>Meta Quest 3S (128GB)</h2>
+        <p style="color: #58a6ff; font-weight: 700; margin-top: 4px;">$299.99 USD</p>
+      </div>
+      <!-- Completely new button: no old testid, no old aria-label, updated text -->
+      <button 
+        type="button" 
+        id="btn-purchase-headset" 
+        data-testid="action_checkout_headset" 
+        class="btn-checkout"
+      >
+        Add Headset to Cart
+      </button>
+    </div>
+
+    <!-- Completely new confirmation banner: no old testid, updated layout -->
+    <div id="confirmation-container">
+      <div 
+        id="badge-confirmed-v4" 
+        data-testid="confirmation_order_badge" 
+        class="order-banner"
+      >
+        ✓ Order Confirmation #ORD-9821
+      </div>
+    </div>
+  </div>
+</body>
+</html>

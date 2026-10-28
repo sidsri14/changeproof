@@ -7,8 +7,11 @@ import { VideoProcessor } from '../dist/core/video_processor.js';
 import { MetaSamAdapter } from '../dist/core/sam_adapter.js';
 import { HudVisualizer } from '../dist/core/hud_visualizer.js';
 import { RegressionRunner } from '../dist/core/regression_runner.js';
+import { SelectorRepairEngine } from '../dist/core/selector_repair_engine.js';
 import { runDemo } from '../dist/cli.js';
 import * as path from 'node:path';
+import * as fs from 'node:fs';
+
 
 
 describe('ChangeProof: Multimodal Playwright Test Synthesis Engine', () => {
@@ -519,6 +522,97 @@ describe('ChangeProof: Multimodal Playwright Test Synthesis Engine', () => {
 
     assert.equal(evalResult.passed, false);
     assert.ok(evalResult.error.includes('missing from page content'));
+  });
+
+  test('Test 22: SelectorRepairEngine.extractCandidates extracts interactive DOM elements and composite selectors', () => {
+    const fixtureHtml = fs.readFileSync(path.resolve('fixtures/sample_app/v4_complete_redesign.html'), 'utf-8');
+    const candidates = SelectorRepairEngine.extractCandidates(fixtureHtml);
+
+    assert.ok(candidates.length >= 3);
+    const searchInput = candidates.find(c => c.dataTestId === 'catalog_query_input');
+    assert.ok(searchInput);
+    assert.equal(searchInput.tag, 'input');
+
+    const button = candidates.find(c => c.dataTestId === 'action_checkout_headset');
+    assert.ok(button);
+    assert.equal(button.tag, 'button');
+    assert.ok(button.compositeSelector.includes('action_checkout_headset'));
+  });
+
+  test('Test 23: SelectorRepairEngine.computeMatchScore scores high confidence for intent, role, and attribute matches', () => {
+    const step = {
+      stepIndex: 2,
+      action: 'click',
+      targetSelector: 'button:has-text("Add to Cart"), [data-testid="elem_add_to_cart"]',
+      evidence: {
+        frameTimestampMs: 3500,
+        frameIndex: 1,
+        boundingBox: { x: 400, y: 300, width: 150, height: 45 },
+        transcriptSpan: { startMs: 3200, endMs: 3800, text: 'Click Add to Cart to purchase the headset' },
+        confidence: 0.94,
+        evidenceHash: 'c'.repeat(64)
+      },
+      isDestructive: false,
+      requiresOperatorConfirmation: false
+    };
+
+    const goodCandidate = {
+      tag: 'button',
+      dataTestId: 'action_checkout_headset',
+      textContent: 'Add Headset to Cart',
+      isDisabled: false,
+      compositeSelector: '[data-testid="action_checkout_headset"]'
+    };
+
+    const { score, reasons } = SelectorRepairEngine.computeMatchScore(step, goodCandidate);
+    assert.ok(score >= 0.50);
+    assert.ok(reasons.some(r => r.includes('click action')));
+    assert.ok(reasons.some(r => r.includes('intent keywords')));
+  });
+
+  test('Test 24: SelectorRepairEngine.repairStep generates deterministic SHA-256 repair proof hash', () => {
+    const { suite } = runDemo();
+    const fixtureHtml = fs.readFileSync(path.resolve('fixtures/sample_app/v4_complete_redesign.html'), 'utf-8');
+    const step2 = suite.steps[1];
+
+    const proposal = SelectorRepairEngine.repairStep(step2, fixtureHtml);
+    assert.ok(proposal);
+    assert.equal(proposal.stepIndex, 2);
+    assert.equal(proposal.repairProofHash.length, 64);
+    assert.ok(proposal.confidence >= 0.50);
+    assert.ok(proposal.repairedSelector.includes('action_checkout_headset'));
+  });
+
+  test('Test 25: SelectorRepairEngine.repairSuite heals broken test suite against v4_complete_redesign.html', () => {
+    const { suite } = runDemo();
+    const fixturePath = path.resolve('fixtures/sample_app/v4_complete_redesign.html');
+
+    // Baseline suite fails on v4 before repair
+    const preRepairEval = RegressionRunner.evaluateSuite(suite, fixturePath);
+    assert.equal(preRepairEval.passed, false);
+    assert.equal(preRepairEval.passedSteps, 0);
+
+    // Run automated self-healing
+    const repairResult = SelectorRepairEngine.repairSuite(suite, fixturePath);
+    assert.equal(repairResult.totalFailedSteps, 3);
+    assert.equal(repairResult.healedStepsCount, 3);
+    assert.equal(repairResult.unresolvedStepsCount, 0);
+
+    // Healed suite passes 100% of assertions on the refactored build
+    assert.equal(repairResult.validationRun?.passed, true);
+    assert.ok(repairResult.healedSuite.playwrightCode.includes('ChangeProof Auto-Heal'));
+    assert.ok(repairResult.healedSuite.playwrightCode.includes('Repair Proof:'));
+  });
+
+  test('Test 26: SelectorRepairEngine fail-closed integrity: refuses low-confidence repairs on v2_regression.html', () => {
+    const { suite } = runDemo();
+    const regressionPath = path.resolve('fixtures/sample_app/v2_regression.html');
+
+    const repairResult = SelectorRepairEngine.repairSuite(suite, regressionPath);
+    // On v2 (where button is disabled and order badge missing), repair should NOT blindly heal
+    assert.equal(repairResult.healedStepsCount, 0);
+    assert.equal(repairResult.unresolvedStepsCount, 2);
+    assert.equal(repairResult.validationRun?.passed, false);
   });
 
 });
